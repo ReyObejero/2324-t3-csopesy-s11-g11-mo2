@@ -57,18 +57,15 @@
     <ClCompile Include="Thread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FirstFitManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PagingManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MemoryManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sjf_scheduler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="main.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SJF_Preemptive_Scheduler.h">
@@ -102,12 +99,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RRScheduler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FirstFitManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PagingManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

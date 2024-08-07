@@ -16,8 +16,6 @@ public:
 		int max_overall_mem;
 		int min_mem_per_proc;
 		int max_mem_per_proc;
-		int min_page_per_proc;
-		int max_page_per_proc;
 	};
 
 	static void Initialize();

@@ -132,12 +132,10 @@
     <ClCompile Include="Console.cpp" />
     <ClCompile Include="ConsoleManager.cpp" />
     <ClCompile Include="FCFSScheduler.cpp" />
-    <ClCompile Include="FirstFitManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MarqueeConsole.cpp" />
     <ClCompile Include="MarqueeWorkerThread.cpp" />
     <ClCompile Include="MemoryManager.cpp" />
-    <ClCompile Include="PagingManager.cpp" />
     <ClCompile Include="Process.cpp" />
     <ClCompile Include="RRScheduler.cpp" />
     <ClCompile Include="SJF_Preemptive_Scheduler.cpp" />
@@ -150,11 +148,10 @@
     <ClInclude Include="Console.h" />
     <ClInclude Include="ConsoleManager.h" />
     <ClInclude Include="FCFSScheduler.h" />
-    <ClInclude Include="FirstFitManager.h" />
+    <ClInclude Include="main.h" />
     <ClInclude Include="MarqueeConsole.h" />
     <ClInclude Include="MarqueeWorkerThread.h" />
     <ClInclude Include="MemoryManager.h" />
-    <ClInclude Include="PagingManager.h" />
     <ClInclude Include="Process.h" />
     <ClInclude Include="RRScheduler.h" />
     <ClInclude Include="SJF_Preemptive_Scheduler.h" />

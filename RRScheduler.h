@@ -16,7 +16,6 @@ private:
     std::vector<std::thread> cpu_threads;
     std::queue<Process*> process_queue;
     std::mutex mtx;
-    std::mutex stealMtx;
     std::condition_variable cv;
     std::chrono::steady_clock::time_point start_time;
     std::list<Process*> running_processes;
