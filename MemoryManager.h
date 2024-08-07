@@ -22,6 +22,7 @@ public:
     virtual int allocateMemory(Process* process) = 0;
     virtual void deallocateMemory(Process* process) = 0;
     virtual void snapshot(int quantumCycle) = 0;
+
     int getTotalMemory();
     //virtual void SetTotalMemory(int totalMemory);
     virtual bool isAllocated(int ret) = 0;
@@ -38,7 +39,7 @@ public:
 
 private:
     int totalMemory; // max-overall-mem
-    
+
     int usedMemory;
     std::vector<Process*> memory;
     int calculateFragmentation();
@@ -47,7 +48,6 @@ private:
 };
 
 static int type;
-static void initializeMemoryManager();
-static MemoryManager* memoryManager = nullptr;
+
 
 #endif // MEMORYMANAGER_H

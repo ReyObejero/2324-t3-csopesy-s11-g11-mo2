@@ -293,6 +293,7 @@ int main() {
                             }
 
                             if (Config::GetConfigParameters().scheduler == "rr") {
+                                // rr_scheduler.add_process(new Process("process" + std::to_string(++process_count), commands_per_process));
                                 rr_scheduler.add_process(new Process("process" + std::to_string(++process_count), commands_per_process));
                             }
 

@@ -1,22 +1,10 @@
 #include "MemoryManager.h"
 #include "FirstFitManager.h"
-#include "PagingManager.h"
 #include "Config.h"
 
+
 int MemoryManager::getTotalMemory() {
-	return this->totalMemory;
-}
-
-
-static void initializeMemoryManager() {
-    if (!memoryManager) {
-        if (Config::GetConfigParameters().min_page_per_proc == 1 && Config::GetConfigParameters().max_page_per_proc == 1) {
-            memoryManager = new FirstFitManager(Config::GetConfigParameters().max_overall_mem);
-        }
-        else {
-            memoryManager = new PagingManager(Config::GetConfigParameters().max_overall_mem);
-        }
-    }
+    return this->totalMemory;
 }
 
 void MemoryManager::store_process(Process* process) {

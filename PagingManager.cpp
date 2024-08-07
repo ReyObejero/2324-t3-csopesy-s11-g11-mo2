@@ -10,23 +10,22 @@ PagingManager::PagingManager(int totalMemory) {
 	//Config::GetConfigParameters().min_mem_per_proc = 16;
 	//Config::GetConfigParameters().max_mem_per_proc = 16;
 
-	//int minLog = std::ceil(std::log2(Config::GetConfigParameters().min_mem_per_proc));
-	//int maxLog = std::floor(std::log2(Config::GetConfigParameters().max_mem_per_proc));
-
 	//Memory Section
-	int minLog = std::ceil(std::log2(32));
-	int maxLog = std::floor(std::log2(32));
+	int minLog = std::ceil(std::log2(Config::GetConfigParameters().min_mem_per_proc));
+	int maxLog = std::floor(std::log2(Config::GetConfigParameters().max_mem_per_proc));
+
 	std::uniform_int_distribution<> dist(minLog, maxLog);
 	int randomExponent = dist(gen);
 	int requiredMemory = 1 << randomExponent;
 	this->memProc = requiredMemory;
 
-	//minLog = std::ceil(std::log2(Config::GetConfigParameters().min_page_per_proc));
-	//maxLog = std::floor(std::log2(Config::GetConfigParameters().max_page_per_proc))
-	
 	//Paging Section;
-	minLog = std::ceil(std::log2(16));
-	maxLog = std::floor(std::log2(16));
+	minLog = std::ceil(std::log2(Config::GetConfigParameters().min_page_per_proc));
+	maxLog = std::floor(std::log2(Config::GetConfigParameters().max_page_per_proc));
+	
+	//minLog = std::ceil(std::log2(16));
+	//maxLog = std::floor(std::log2(16));
+
 	std::uniform_int_distribution<> rng(minLog, maxLog);
 	randomExponent = rng(gen);
 	int pagePerProcess = 1 << randomExponent;
