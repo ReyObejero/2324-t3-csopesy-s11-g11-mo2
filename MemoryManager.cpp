@@ -46,7 +46,7 @@ MemoryManager::process_data MemoryManager::load_process(Process* process) {
             if (std::getline(iss, value)) {
                 value.erase(0, value.find_first_not_of(' '));
                 if (key == "Process ID") {
-                    pd.name = std::stoi(value);
+                    pd.process_id = std::stoi(value);
                 }
                 else if (key == "Process Name") {
                     pd.name = value;

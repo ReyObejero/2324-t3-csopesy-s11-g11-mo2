@@ -79,7 +79,9 @@ void RR_Scheduler::cpu_worker(int core_id) {
             process_queue.pop();
 
             if (proc->isBackingStored) {
-                proc->isBackingStored = false;
+                //std::cout << proc->process_id << " = From Backing Store" << std::endl;
+                memoryManager->load_process(proc);
+                //proc->isBackingStored = false;
             }
 
             //first try
@@ -90,7 +92,7 @@ void RR_Scheduler::cpu_worker(int core_id) {
 
                 bool isSecondTrySuccess = false;
                 std::queue<Process*> copy = process_queue;
-                std::queue<Process*> updated;
+                //std::queue<Process*> updated;
                 std::vector<Process*> converted;
 
                 while (!copy.empty()) {
@@ -100,7 +102,7 @@ void RR_Scheduler::cpu_worker(int core_id) {
                         if (p->startAddress != -1)
                             converted.push_back(p);
                         else {
-                            updated.push(p);
+                            //updated.push(p);
                         }
                     }
                     else {
@@ -108,8 +110,12 @@ void RR_Scheduler::cpu_worker(int core_id) {
                         if (pagingManager->expectedFramesPerProcess > p->frames_to_allocate) {
                             converted.push_back(p);
                         }
+                        else {
+                            //updated.push(p);                             
+                        }
                     }
                 }
+
 
                 if (converted.size() > 0) {
                     std::random_device rd;
@@ -122,17 +128,9 @@ void RR_Scheduler::cpu_worker(int core_id) {
                         memoryManager->store_process(shuffled);
                         isSecondTrySuccess = memoryManager->isAllocated(memoryManager->allocateMemory(proc));
                         if (isSecondTrySuccess) {
-                            process_queue.push(shuffled);
                             break;
                         }
                     }
-                    /*Process* toBackStore = converted[dist(gen)];
-                    memoryManager->deallocateMemory(toBackStore);
-                    memoryManager->store_process(toBackStore);
-                    isSecondTrySuccess = memoryManager->isAllocated(memoryManager->allocateMemory(proc));
-                    if (isSecondTrySuccess) {
-                        process_queue.push(toBackStore);
-                    }*/
                 }
 
                 if (!isSecondTrySuccess) {
@@ -212,9 +210,11 @@ void RR_Scheduler::cpu_worker(int core_id) {
                 running_processes.remove(proc);
             }
             else {
+                //std::cout << "Finished name of process = " << proc->process_id << std::endl;
                 running_processes.remove(proc);
-                finished_processes.push_back(proc);
                 memoryManager->deallocateMemory(proc);
+                finished_processes.push_back(proc);
+
             }
         }
     }
