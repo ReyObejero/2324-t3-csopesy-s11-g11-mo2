@@ -52,9 +52,8 @@ void FCFS_Scheduler::print_CPU_UTIL() {
     std::cout << "----------------\n";
 }
 
-float FCFS_Scheduler::GetCpuUtilization()
+int FCFS_Scheduler::GetCpuUtilization()
 {
-    std::lock_guard<std::mutex> lock(mtx);
     std::vector<int> active_cores;
 
     for (auto& process : this->running_processes) {
@@ -257,7 +256,7 @@ void FCFS_Scheduler::ReportUtil() {
 
     std::lock_guard<std::mutex> lock(mtx);
     std::ofstream log("csopesy-log.txt", std::ios::app);
-    log << "CPU Utilization: " << GetCpuUtilization << "%" << std::endl;
+    log << "CPU Utilization: " << GetCpuUtilization() << "%" << std::endl;
     log << "Cores Used: " << cores_used.size() << std::endl;
     log << "Cores Available: " << num_cores - cores_used.size() << std::endl;
     log << "----------------\n";

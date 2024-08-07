@@ -1,6 +1,3 @@
-
-#include "PagingManager.h"
-#include "FirstFitManager.h"
 #include "RRScheduler.h"
 #include <iostream>
 #include <chrono>
@@ -8,9 +5,10 @@
 #include "Config.h"
 #include <algorithm>
 #include <random>
+#include "MemoryManager.h"
+#include "PagingManager.h"
+#include "FirstFitManager.h"
 
-//MemoryManager* pointerFit;
-//MemoryManager memoryManager;
 
 RR_Scheduler::RR_Scheduler(int cores, int quantum) : num_cores(cores), time_quantum(quantum), running(false) {}
 
@@ -20,15 +18,33 @@ RR_Scheduler::~RR_Scheduler() {
 
 void RR_Scheduler::add_process(Process* proc) {
     std::lock_guard<std::mutex> lock(mtx);
+
+    if (Config::GetConfigParameters().max_mem_per_proc == 1 && Config::GetConfigParameters().min_page_per_proc == 1) {
+
+    }
+    else {
+        PagingManager* paging = dynamic_cast<PagingManager*>(memoryManager);
+        proc->frames_to_allocate = paging->memProc / paging->pageSize;
+    }
     process_queue.push(proc);
     cv.notify_one();
 }
 
 void RR_Scheduler::start() {
-    initializeMemoryManager();   
+
+    if (!memoryManager) {
+        if (Config::GetConfigParameters().min_page_per_proc == 1 && Config::GetConfigParameters().max_page_per_proc == 1) {
+            memoryManager = new FirstFitManager(Config::GetConfigParameters().max_overall_mem);
+        }
+        else {
+            memoryManager = new PagingManager(Config::GetConfigParameters().max_overall_mem);
+        }
+    }
+
     running = true;
     start_time = std::chrono::steady_clock::now(); // Record the start time
     for (int i = 0; i < num_cores; ++i) {
+        isStealing = false;
         cpu_threads.emplace_back(&RR_Scheduler::cpu_worker, this, i);
     }
     //std::cout << "Scheduler started with " << num_cores << " cores.\n";
@@ -42,6 +58,7 @@ void RR_Scheduler::stop() {
             t.join();
         }
     }
+
     //std::cout << "Scheduler stopped.\n";
 }
 
@@ -52,8 +69,7 @@ void RR_Scheduler::cpu_worker(int core_id) {
         Process* proc = nullptr;
 
         {
-            std::unique_lock<std::mutex> lock(mtx);
-            std::unique_lock<std::mutex> stealLock(stealMtx);
+            std::unique_lock<std::mutex> lock(this->mtx);
 
             cv.wait(lock, [&] { return !process_queue.empty() || !running; });
 
@@ -62,21 +78,30 @@ void RR_Scheduler::cpu_worker(int core_id) {
             proc = process_queue.front();
             process_queue.pop();
 
+            if (proc->isBackingStored) {
+                proc->isBackingStored = false;
+            }
+
             //first try
             if (!memoryManager->isAllocated(memoryManager->allocateMemory(proc))) {
-                //second try, deallocate other core's process.
-                //third try, put to backing store any process.
-               
+                //std::cout << "First attempt failed." << std::endl;
+                //second try, deallocate/backingstore random allocated process on process queue
+                //third try, deallocate/backingstore the other core's process
+
                 bool isSecondTrySuccess = false;
                 std::queue<Process*> copy = process_queue;
+                std::queue<Process*> updated;
                 std::vector<Process*> converted;
 
-                while (copy.empty()) {
+                while (!copy.empty()) {
                     Process* p = copy.front();
                     copy.pop();
                     if (dynamic_cast<FirstFitManager*>(memoryManager) != nullptr) {
                         if (p->startAddress != -1)
                             converted.push_back(p);
+                        else {
+                            updated.push(p);
+                        }
                     }
                     else {
                         PagingManager* pagingManager = dynamic_cast<PagingManager*>(memoryManager);
@@ -90,23 +115,43 @@ void RR_Scheduler::cpu_worker(int core_id) {
                     std::random_device rd;
                     std::mt19937 gen(rd());
                     std::uniform_int_distribution<> dist(0, converted.size() - 1);
-                    Process* toBackStore = converted[dist(gen)];             
+                    shuffle(converted.begin(), converted.end(), rd);
+
+                    for (Process* shuffled : converted) {
+                        memoryManager->deallocateMemory(shuffled);
+                        memoryManager->store_process(shuffled);
+                        isSecondTrySuccess = memoryManager->isAllocated(memoryManager->allocateMemory(proc));
+                        if (isSecondTrySuccess) {
+                            process_queue.push(shuffled);
+                            break;
+                        }
+                    }
+                    /*Process* toBackStore = converted[dist(gen)];
                     memoryManager->deallocateMemory(toBackStore);
                     memoryManager->store_process(toBackStore);
                     isSecondTrySuccess = memoryManager->isAllocated(memoryManager->allocateMemory(proc));
                     if (isSecondTrySuccess) {
                         process_queue.push(toBackStore);
-                    }
+                    }*/
                 }
 
                 if (!isSecondTrySuccess) {
-                    bool isThirdTrySuccess = false;
+                    //std::cout << "Second attempt failed." << std::endl;
 
-                    //Backing store time.
+                    std::unique_lock<std::mutex> stealLock(this->stealMtx);
+                    isStealing = true;
+
+                    stealCv.wait_for(stealLock, std::chrono::seconds(3), [&] { return !isStealing; });
+                    bool isThirdTrySuccess = memoryManager->isAllocated(memoryManager->allocateMemory(proc));
 
                     if (!isThirdTrySuccess) {
+                        //std::cout << "Third attempt failed." << std::endl;
                         process_queue.push(proc);
                         continue;
+                    }
+
+                    else {
+
                     }
                 }
 
@@ -127,42 +172,56 @@ void RR_Scheduler::cpu_worker(int core_id) {
 
         while (commands_to_execute > 0 && proc->executed_commands < proc->total_commands) {
             {
-                std::lock_guard<std::mutex> lock(mtx);
+                if (isStealing) {
+                    std::lock_guard<std::mutex> lock(mtx);
+                    if (isStealing) {
+                        isStealing = false;
+                        memoryManager->deallocateMemory(proc);
+                        memoryManager->store_process(proc);
+                        process_queue.push(proc);
+                        stealCv.notify_one();
+                        proc = nullptr;
+                        break;
+                    }
+                }
 
                 proc->executed_commands += Config::GetConfigParameters().quantum_cycles;
                 executed_in_quantum += Config::GetConfigParameters().quantum_cycles;
                 if (proc->executed_commands >= proc->total_commands) {
                     proc->executed_commands = proc->total_commands;
                 }
+
+                //std::cout << "End Loop Execute..." << std::endl;
             }
 
             std::this_thread::sleep_for(std::chrono::milliseconds((int)(Config::GetConfigParameters().delay_per_exec * 1000)));
 
             if (executed_in_quantum >= time_quantum) {
+
+                //std::cout << "Count = " << proc->executed_commands << std::endl;
                 break;
             }
         }
 
+        //memoryManager->snapshot(++quantumCycle);
 
-        memoryManager->snapshot(++quantumCycle);
-
-        if (proc->executed_commands < proc->total_commands) {
-            add_process(proc);
+        if (proc) {
             std::lock_guard<std::mutex> lock(mtx);
-            running_processes.remove(proc);
-            memoryManager->deallocateMemory(proc);
-        }
-        else {
-            std::lock_guard<std::mutex> lock(mtx);
-            running_processes.remove(proc);
-            finished_processes.push_back(proc);
-            memoryManager->deallocateMemory(proc);
+            if (proc->executed_commands < proc->total_commands) {
+                process_queue.push(proc);
+                running_processes.remove(proc);
+            }
+            else {
+                running_processes.remove(proc);
+                finished_processes.push_back(proc);
+                memoryManager->deallocateMemory(proc);
+            }
         }
     }
 }
 
 void RR_Scheduler::screen_ls() {
-    std::lock_guard<std::mutex> lock(mtx);
+    //std::lock_guard<std::mutex> lock(mtx);
     print_CPU_UTIL();
     print_running_processes();
     print_finished_processes();
@@ -368,4 +427,16 @@ void RR_Scheduler::print_process_details(const std::string& process_name, int sc
 
     // If process not found in any list
     std::cout << "Process " << process_name << " not found.\n";
+}
+
+int RR_Scheduler::GetCpuUtilization() {
+    std::vector<int> active_cores;
+
+    for (auto& process : this->running_processes) {
+        if (!(std::count(active_cores.begin(), active_cores.end(), process->core_id))) {
+            active_cores.push_back(process->core_id);
+        }
+    }
+
+    return (active_cores.size() / static_cast<float>(this->num_cores)) * 100;
 }

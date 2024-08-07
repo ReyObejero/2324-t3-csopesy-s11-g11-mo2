@@ -91,29 +91,117 @@ int main() {
                     cpuUtilization = fcfs_scheduler.GetCpuUtilization();
                 }
 
+                if (Config::GetConfigParameters().scheduler == "rr") {
+                   cpuUtilization = rr_scheduler.GetCpuUtilization();
+                }
+
                 if (Config::GetConfigParameters().scheduler == "sjf") {
                     if (Config::GetConfigParameters().preemptive == 0) {
                         cpuUtilization = sjf_scheduler.GetCpuUtilization();
-                    }
-
-                    if (Config::GetConfigParameters().preemptive == 1) {
+                    } else {
                         cpuUtilization = sjf_preemptive_scheduler.GetCpuUtilization();
                     }
                 }
+
+                float freeMem = 0, usedMemory = 0;
+                float totalMem;
+                int memUtil;
+
+                // Checks if memory allocator is first-fit
+                if (dynamic_cast<PagingManager*>(rr_scheduler.memoryManager) == nullptr) {
+                    FirstFitManager* ffm = dynamic_cast<FirstFitManager*>(rr_scheduler.memoryManager);
+
+                    for (int i = 0; i < ffm->getMemoryBlockList().size(); i++) {
+                        if (ffm->getMemoryBlockList()[i] == -1) {
+                            freeMem++;
+                        }
+                        else {
+                            usedMemory++;
+                        }
+                    }
+
+                    totalMem = Config::GetConfigParameters().max_overall_mem;
+                }
+                else {
+                    PagingManager* pm = dynamic_cast<PagingManager*>(rr_scheduler.memoryManager);
+                    freeMem = pm->currentFrames * pm->pageSize;
+                    totalMem = pm->maxFrames * pm->pageSize;
+                    usedMemory = totalMem - freeMem;
+                }
+
+                memUtil = (usedMemory / totalMem) * 100;
 
                 std::cout << std::endl;
                 std::cout << "-------------------------------------------" << std::endl;
                 std::cout << "| PROCESS-SMI V01.00 Driver Version 01.00 |" << std::endl;
                 std::cout << "-------------------------------------------" << std::endl;
                 std::cout << "CPU-Util: " << cpuUtilization << "%" << std::endl;
-                std::cout << "Memory Usage: 16384KB / " << Config::GetConfigParameters().max_overall_mem << "KB" << std::endl;
-                std::cout << "Memory Util: 100%" << std::endl;
+                std::cout << "Memory Usage: " << usedMemory << "KB / " << Config::GetConfigParameters().max_overall_mem << "KB" << std::endl;
+                std::cout << "Memory Util: " << memUtil << "%" << std::endl;
                 std::cout << std::endl;
                 std::cout << "===================================" << std::endl;
                 std::cout << "Running processes and memory usage:" << std::endl;
-                std::cout << "process05 134 KB" << std::endl;
-                std::cout << "process06 134 KB" << std::endl;
-                std::cout << "process07 977 KB" << std::endl;
+
+                if (Config::GetConfigParameters().scheduler == "fcfs") {
+                    for (const auto& process : fcfs_scheduler.running_processes) {
+                        int proc_mem = 0;
+                        if (dynamic_cast<PagingManager*>(rr_scheduler.memoryManager) == nullptr) {
+                            proc_mem = process->endAddress - process->startAddress;
+                        } else {
+                            PagingManager* pm = dynamic_cast<PagingManager*>(rr_scheduler.memoryManager);
+                            proc_mem = pm->pageSize * pm->expectedFramesPerProcess;
+                        }
+
+                        std::cout << process->name << " " << proc_mem << "KB" << std::endl;
+                    }
+                }
+
+                if (Config::GetConfigParameters().scheduler == "rr") {
+                    for (const auto& process : rr_scheduler.running_processes) {
+                        int proc_mem = 0;
+                        if (dynamic_cast<PagingManager*>(rr_scheduler.memoryManager) == nullptr) {
+                            proc_mem = process->endAddress - process->startAddress;
+                        }
+                        else {
+                            PagingManager* pm = dynamic_cast<PagingManager*>(rr_scheduler.memoryManager);
+                            proc_mem = pm->pageSize * pm->expectedFramesPerProcess;
+                        }
+
+                        std::cout << process->name << " " << proc_mem << "KB" << std::endl;
+                    }
+                }
+
+                if (Config::GetConfigParameters().scheduler == "sjf") {
+                    if (Config::GetConfigParameters().preemptive == 0) {
+                        for (const auto& process : sjf_scheduler.running_processes) {
+                            int proc_mem = 0;
+                            if (dynamic_cast<PagingManager*>(rr_scheduler.memoryManager) == nullptr) {
+                                proc_mem = process->endAddress - process->startAddress;
+                            }
+                            else {
+                                PagingManager* pm = dynamic_cast<PagingManager*>(rr_scheduler.memoryManager);
+                                proc_mem = pm->pageSize * pm->expectedFramesPerProcess;
+                            }
+
+                            std::cout << process->name << " " << proc_mem << "KB" << std::endl;
+                        }
+                    }
+                    else {
+                        for (const auto& process : sjf_preemptive_scheduler.running_processes) {
+                            int proc_mem = 0;
+                            if (dynamic_cast<PagingManager*>(rr_scheduler.memoryManager) == nullptr) {
+                                proc_mem = process->endAddress - process->startAddress;
+                            }
+                            else {
+                                PagingManager* pm = dynamic_cast<PagingManager*>(rr_scheduler.memoryManager);
+                                proc_mem = pm->pageSize * pm->expectedFramesPerProcess;
+                            }
+
+                            std::cout << process->name << " " << proc_mem << "KB" << std::endl;
+                        }
+                    }
+                }
+
                 std::cout << "-----------------------------------" << std::endl;
             }
 

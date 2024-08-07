@@ -3,7 +3,7 @@
 #include <random>
 #include "Config.h"
 
-FirstFitManager::FirstFitManager(int totalMemory) : memory(std::make_unique<std::vector<int>>(totalMemory, -1)){
+FirstFitManager::FirstFitManager(int totalMemory) : memory(std::make_unique<std::vector<int>>(totalMemory, -1)) {
 	std::random_device rd;
 	std::mt19937 gen(rd());
 
@@ -26,7 +26,10 @@ std::vector<int>& FirstFitManager::getMemoryBlockList() {
 
 int FirstFitManager::allocateMemory(Process* process) {
 	std::lock_guard<std::mutex> lock(this->memoryMutex);
-	
+
+	if (process->startAddress != -1)
+		return 1;
+
 	int counter = 0;
 	int addressStart = -1;
 
@@ -44,7 +47,7 @@ int FirstFitManager::allocateMemory(Process* process) {
 				break;
 			}
 		}
-		else {		
+		else {
 			//std::cout << "   = Fallen" << std::endl;
 			counter = 0;
 			addressStart = -1;
@@ -53,7 +56,7 @@ int FirstFitManager::allocateMemory(Process* process) {
 
 	//If finished and addressStart is not -1.
 	if (counter == this->memProc && addressStart != -1) {
-		
+
 		process->startAddress = addressStart;
 		process->endAddress = addressStart + this->memProc - 1;
 
@@ -80,10 +83,9 @@ void FirstFitManager::deallocateMemory(Process* process) {
 	}
 }
 
-void FirstFitManager :: snapshot(int cycle) {
+void FirstFitManager::snapshot(int cycle) {
 
 }
-
 
 
 

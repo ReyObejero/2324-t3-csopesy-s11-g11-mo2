@@ -132,9 +132,8 @@ void SJF_Scheduler::print_CPU_UTIL() {
     std::cout << "----------------\n";
 }
 
-float SJF_Scheduler::GetCpuUtilization()
+int SJF_Scheduler::GetCpuUtilization()
 {
-    std::lock_guard<std::mutex> lock(mtx);
     std::vector<int> active_cores;
 
     for (auto& process : this->running_processes) {

@@ -210,9 +210,8 @@ void SJF_Preemptive_Scheduler::ReportUtil() {
     std::cout << "Report generated at /csopesy-log.txt" << std::endl;
 }
 
-float SJF_Preemptive_Scheduler::GetCpuUtilization()
+int SJF_Preemptive_Scheduler::GetCpuUtilization()
 {
-    std::lock_guard<std::mutex> lock(mtx);
     std::vector<int> active_cores;
 
     for (auto& process : this->running_processes) {
