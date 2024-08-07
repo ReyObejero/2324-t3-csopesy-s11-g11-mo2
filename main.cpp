@@ -85,11 +85,27 @@ int main() {
             }
 
             else if (command == "process-smi") {
+                float cpuUtilization = 0.0f;
+
+                if (Config::GetConfigParameters().scheduler == "fcfs") {
+                    cpuUtilization = fcfs_scheduler.GetCpuUtilization();
+                }
+
+                if (Config::GetConfigParameters().scheduler == "sjf") {
+                    if (Config::GetConfigParameters().preemptive == 0) {
+                        cpuUtilization = sjf_scheduler.GetCpuUtilization();
+                    }
+
+                    if (Config::GetConfigParameters().preemptive == 1) {
+                        cpuUtilization = sjf_preemptive_scheduler.GetCpuUtilization();
+                    }
+                }
+
                 std::cout << std::endl;
                 std::cout << "-------------------------------------------" << std::endl;
                 std::cout << "| PROCESS-SMI V01.00 Driver Version 01.00 |" << std::endl;
                 std::cout << "-------------------------------------------" << std::endl;
-                std::cout << "CPU-Util: " << fcfs_scheduler.GetCpuUtilization() << "%" << std::endl;
+                std::cout << "CPU-Util: " << cpuUtilization << "%" << std::endl;
                 std::cout << "Memory Usage: 16384KB / " << Config::GetConfigParameters().max_overall_mem << "KB" << std::endl;
                 std::cout << "Memory Util: 100%" << std::endl;
                 std::cout << std::endl;

@@ -30,21 +30,22 @@ void FCFS_Scheduler::start() {
 void FCFS_Scheduler::print_CPU_UTIL() {
     int numOfRunningProcess = 0;
     int numOfFinishedProcess = 0;
-    int cpuUtilization = 0;
+    //int cpuUtilization = 0;
     for (auto& proc : running_processes) {
         numOfRunningProcess++;
     }
     for (auto& proc : finished_processes) {
         numOfFinishedProcess++;
     }
-    if (numOfRunningProcess == num_cores) {
+    /*if (numOfRunningProcess == num_cores) {
         cpuUtilization = 100;
 
     }
     else if (numOfRunningProcess == 0) {
         cpuUtilization = 0;
-    }
-    std::cout << "Cpu Utilization: " << cpuUtilization << "%\n";
+    }*/
+
+    std::cout << "Cpu Utilization: " << GetCpuUtilization() << "%\n";
     std::cout << "Cores Used: " << numOfRunningProcess << "\n";
     std::cout << "Cores Available: " << num_cores - numOfRunningProcess << "\n";
 
@@ -53,6 +54,7 @@ void FCFS_Scheduler::print_CPU_UTIL() {
 
 float FCFS_Scheduler::GetCpuUtilization()
 {
+    std::lock_guard<std::mutex> lock(mtx);
     std::vector<int> active_cores;
 
     for (auto& process : this->running_processes) {
@@ -217,20 +219,20 @@ void FCFS_Scheduler::SetCpuCore(int cpu_core) {
 void FCFS_Scheduler::ReportUtil() {
     int numOfRunningProcess = 0;
     int numOfFinishedProcess = 0;
-    int cpuUtilization = 0;
+    //int cpuUtilization = 0;
     for (auto& proc : running_processes) {
         numOfRunningProcess++;
     }
     for (auto& proc : finished_processes) {
         numOfFinishedProcess++;
     }
-    if (numOfRunningProcess == num_cores) {
+    /*if (numOfRunningProcess == num_cores) {
         cpuUtilization = 100;
 
     }
     else if (numOfRunningProcess == 0) {
         cpuUtilization = 0;
-    }
+    }*/
     std::vector<int> cores_used;
     int total_executed_commands = 0;
     int total_commands = 0;
@@ -255,7 +257,7 @@ void FCFS_Scheduler::ReportUtil() {
 
     std::lock_guard<std::mutex> lock(mtx);
     std::ofstream log("csopesy-log.txt", std::ios::app);
-    log << "CPU Utilization: " << cpuUtilization << "%" << std::endl;
+    log << "CPU Utilization: " << GetCpuUtilization << "%" << std::endl;
     log << "Cores Used: " << cores_used.size() << std::endl;
     log << "Cores Available: " << num_cores - cores_used.size() << std::endl;
     log << "----------------\n";
