@@ -64,6 +64,12 @@ void Config::Initialize() {
         else if (key == "max-mem-per-proc") {
             config_parameters_.max_mem_per_proc = std::stoi(value);
         }
+        else if (key == "min-page-per-proc") {
+            config_parameters_.min_page_per_proc = std::stoi(value);
+        }
+        else if (key == "max-page-per-proc") {
+            config_parameters_.max_page_per_proc = std::stoi(value);
+        }
         else {
             std::cout << "File \"config.txt\" key of " << "\"" << key << "\" is invalid." << std::endl;
         }
