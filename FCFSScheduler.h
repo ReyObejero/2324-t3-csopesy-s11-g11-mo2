@@ -17,7 +17,6 @@ private:
     std::mutex mtx;
     std::condition_variable cv;
     int num_cores;
-    std::list<Process*> running_processes;
     std::list<Process*> finished_processes;
 
     void cpu_worker(int core_id);
@@ -40,4 +39,8 @@ public:
     // Validates process name against the queued, running, and finished processes lists
     bool isValidProcessName(const std::string& process_name);
     void print_CPU_UTIL();
+
+
+    std::list<Process*> running_processes;
+    int GetCpuUtilization();
 };

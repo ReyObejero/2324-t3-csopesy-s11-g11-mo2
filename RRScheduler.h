@@ -1,4 +1,6 @@
 #pragma once
+
+#include "MemoryManager.h"
 #include <queue>
 #include <vector>
 #include <thread>
@@ -6,10 +8,10 @@
 #include <condition_variable>
 #include "Process.h"
 #include <list>
-#include "process.h"
 
 class RR_Scheduler {
 private:
+    bool isStealing = false;
     int num_cores;
     int time_quantum;
     bool running;
@@ -18,12 +20,13 @@ private:
     std::mutex mtx;
     std::mutex stealMtx;
     std::condition_variable cv;
+    std::condition_variable stealCv;
     std::chrono::steady_clock::time_point start_time;
-    std::list<Process*> running_processes;
     std::list<Process*> finished_processes;
     void cpu_worker(int core_id);
 
 public:
+    MemoryManager* memoryManager = nullptr;
     RR_Scheduler(int cores, int quantum);
     ~RR_Scheduler();
     void add_process(Process* proc);
@@ -38,6 +41,8 @@ public:
     void SetQuantum(int quantum);
     bool isValidProcessName(const std::string& process_name);
     void ReportUtil();
-    float GetCpuUtilization();
     void print_CPU_UTIL();
+
+    std::list<Process*> running_processes;
+    int GetCpuUtilization();
 };

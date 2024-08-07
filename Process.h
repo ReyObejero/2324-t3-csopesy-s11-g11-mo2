@@ -21,7 +21,7 @@ public:
     int core_id; // which core this process is assigned
     int process_id; // process id 
     int startAddress = -1; // memory start address
-    int endAddress; // memory end address
+    int endAddress = -1; // memory end address
 
     Process(const std::string& pname, int commands);
     ~Process();

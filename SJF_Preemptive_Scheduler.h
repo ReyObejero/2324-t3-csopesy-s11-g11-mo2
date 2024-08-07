@@ -25,7 +25,6 @@ private:
     bool running;
     std::vector<std::thread> cpu_threads;
     std::priority_queue<Process*, std::vector<Process*>, CompareProcessB> ready_queue;
-    std::list<Process*> running_processes;
     std::vector<Process*> finished_processes;
     std::mutex mtx;
     std::condition_variable cv;
@@ -47,5 +46,8 @@ public:
     bool isValidProcessName(const std::string& process_name);
     void print_CPU_UTIL();
     void ReportUtil();
+
+    std::list<Process*> running_processes;
+    int GetCpuUtilization();
 };
 

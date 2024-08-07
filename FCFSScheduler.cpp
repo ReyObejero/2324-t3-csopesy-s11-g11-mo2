@@ -6,6 +6,7 @@
 #include <sstream> 
 #include <random>
 #include "Config.h"
+#include <algorithm>
 
 FCFS_Scheduler::FCFS_Scheduler(int cores) : num_cores(cores), running(true) {}
 
@@ -29,25 +30,43 @@ void FCFS_Scheduler::start() {
 void FCFS_Scheduler::print_CPU_UTIL() {
     int numOfRunningProcess = 0;
     int numOfFinishedProcess = 0;
-    int cpuUtilization = 0;
+    //int cpuUtilization = 0;
     for (auto& proc : running_processes) {
         numOfRunningProcess++;
     }
     for (auto& proc : finished_processes) {
         numOfFinishedProcess++;
     }
-    if (numOfRunningProcess == num_cores) {
+    /*if (numOfRunningProcess == num_cores) {
         cpuUtilization = 100;
 
     }
     else if (numOfRunningProcess == 0) {
         cpuUtilization = 0;
-    }
-    std::cout << "Cpu Utilization: " << cpuUtilization << "%\n";
+    }*/
+
+    std::cout << "Cpu Utilization: " << GetCpuUtilization() << "%\n";
     std::cout << "Cores Used: " << numOfRunningProcess << "\n";
     std::cout << "Cores Available: " << num_cores - numOfRunningProcess << "\n";
 
     std::cout << "----------------\n";
+}
+
+int FCFS_Scheduler::GetCpuUtilization()
+{
+    std::vector<int> active_cores;
+
+    for (auto& process : this->running_processes) {
+        //std::cout << "Core " << process->core_id << std::endl;
+
+        if (!(std::count(active_cores.begin(), active_cores.end(), process->core_id))) {
+            active_cores.push_back(process->core_id);
+        }
+    }
+
+    //std::cout << "Active Cores " << active_cores.size() << " / Number of Cores " << this->num_cores << std::endl;
+
+    return (active_cores.size() / static_cast<float>(this->num_cores)) * 100;
 }
 
 void FCFS_Scheduler::stop() {
@@ -199,20 +218,20 @@ void FCFS_Scheduler::SetCpuCore(int cpu_core) {
 void FCFS_Scheduler::ReportUtil() {
     int numOfRunningProcess = 0;
     int numOfFinishedProcess = 0;
-    int cpuUtilization = 0;
+    //int cpuUtilization = 0;
     for (auto& proc : running_processes) {
         numOfRunningProcess++;
     }
     for (auto& proc : finished_processes) {
         numOfFinishedProcess++;
     }
-    if (numOfRunningProcess == num_cores) {
+    /*if (numOfRunningProcess == num_cores) {
         cpuUtilization = 100;
 
     }
     else if (numOfRunningProcess == 0) {
         cpuUtilization = 0;
-    }
+    }*/
     std::vector<int> cores_used;
     int total_executed_commands = 0;
     int total_commands = 0;
@@ -237,7 +256,7 @@ void FCFS_Scheduler::ReportUtil() {
 
     std::lock_guard<std::mutex> lock(mtx);
     std::ofstream log("csopesy-log.txt", std::ios::app);
-    log << "CPU Utilization: " << cpuUtilization << "%" << std::endl;
+    log << "CPU Utilization: " << GetCpuUtilization() << "%" << std::endl;
     log << "Cores Used: " << cores_used.size() << std::endl;
     log << "Cores Available: " << num_cores - cores_used.size() << std::endl;
     log << "----------------\n";
