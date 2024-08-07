@@ -4,11 +4,10 @@
 #include "Config.h"
 
 int MemoryManager::getTotalMemory() {
-	return this->totalMemory;
+    return this->totalMemory;
 }
 
-
-static void initializeMemoryManager() {
+void initializeMemoryManager() {
     if (!memoryManager) {
         if (Config::GetConfigParameters().min_page_per_proc == 1 && Config::GetConfigParameters().max_page_per_proc == 1) {
             memoryManager = new FirstFitManager(Config::GetConfigParameters().max_overall_mem);

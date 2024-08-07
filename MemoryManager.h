@@ -38,7 +38,7 @@ public:
 
 private:
     int totalMemory; // max-overall-mem
-    
+
     int usedMemory;
     std::vector<Process*> memory;
     int calculateFragmentation();
@@ -47,7 +47,7 @@ private:
 };
 
 static int type;
-static void initializeMemoryManager();
+void initializeMemoryManager();
 static MemoryManager* memoryManager = nullptr;
 
 #endif // MEMORYMANAGER_H
